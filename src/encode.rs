@@ -10,6 +10,7 @@ pub trait Encode {
 }
 
 /// A struct used to encode data to a binary data.
+#[derive(Default)]
 pub struct Encoder {
     bytes: Vec<u8>,
 }
@@ -17,7 +18,7 @@ pub struct Encoder {
 impl Encoder {
     /// Creates a new `Encoder`.
     pub fn new() -> Self {
-        Encoder { bytes: Vec::new() }
+        Encoder::default()
     }
 
     /// Encodes the given value with the given field ID and appends it to the encoder's byte vector.
