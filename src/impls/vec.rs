@@ -12,14 +12,6 @@ impl<T: Decode> Decode for Vec<T> {
         // First get the count of elements in the vector
         let count = read_u64(&mut bytes).map_err(|_| DecodeError::UnexpectedEof)?;
         let count_usize = count.try_into().map_err(|_| DecodeError::InvalidLength)?;
-
-        // Prevent allocating massive vectors by checking if the count is larger than the remaining bytes
-        // This may not work for all types (maybe a single element is very large), but yea
-        // idk
-        if count_usize > bytes.len() {
-            return Err(DecodeError::InvalidLength);
-        }
-
         let mut vec = Vec::new();
 
         // Then read the elements one by one
