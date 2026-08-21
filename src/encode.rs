@@ -46,10 +46,18 @@ impl Encoder {
         Ok(())
     }
 
+    /// Appends the given byte to the encoder's byte vector.
+    ///
+    /// # Parameter
+    /// - `byte`: A single byte to be added to the encoder's byte vector.
+    pub fn write_byte(&mut self, byte: u8) {
+        self.bytes.push(byte);
+    }
+
     /// Appends the given bytes to the encoder's byte vector.
     ///
     /// # Parameter
-    /// - `bytes`: A slice of bytes to append to the encoder's byte vector.
+    /// - `bytes`: A slice of bytes to be added to the encoder's byte vector.
     pub fn write_bytes(&mut self, bytes: &[u8]) {
         self.bytes.extend_from_slice(bytes);
     }

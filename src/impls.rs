@@ -1,4 +1,90 @@
-use crate::{Decode, DecodeError, ValueDecoder, primitives::*};
+use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder, primitives::*};
+
+// --- ENCODING ---
+
+impl Encode for u8 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_byte(*self);
+        Ok(())
+    }
+}
+
+impl Encode for u16 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for u32 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for u64 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for u128 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for i8 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for i16 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for i32 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for i64 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for f32 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for f64 {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_bytes(&Self::to_le_bytes(*self));
+        Ok(())
+    }
+}
+
+impl Encode for bool {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        e.write_byte(if *self { 1 } else { 0 });
+        Ok(())
+    }
+}
 
 // --- DECODING ---
 

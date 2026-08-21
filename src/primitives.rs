@@ -2,16 +2,6 @@ use std::io::{self, Read};
 
 // --- WRITE ---
 
-/// Writes the given `u8` value to the given byte vector.
-pub(crate) fn write_u8(bytes: &mut Vec<u8>, value: u8) {
-    bytes.push(value);
-}
-
-/// Writes the given `u16` value to the given byte vector.
-pub(crate) fn write_u16(bytes: &mut Vec<u8>, value: u16) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
 /// Writes the given `u32` value to the given byte vector.
 pub(crate) fn write_u32(bytes: &mut Vec<u8>, value: u32) {
     bytes.extend_from_slice(&value.to_le_bytes());
@@ -20,51 +10,6 @@ pub(crate) fn write_u32(bytes: &mut Vec<u8>, value: u32) {
 /// Writes the given `u64` value to the given byte vector.
 pub(crate) fn write_u64(bytes: &mut Vec<u8>, value: u64) {
     bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `u128` value to the given byte vector.
-pub(crate) fn write_u128(bytes: &mut Vec<u8>, value: u128) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `u8` value to the given byte vector.
-pub(crate) fn write_i8(bytes: &mut Vec<u8>, value: i8) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `i16` value to the given byte vector.
-pub(crate) fn write_i16(bytes: &mut Vec<u8>, value: i16) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `i32` value to the given byte vector.
-pub(crate) fn write_i32(bytes: &mut Vec<u8>, value: i32) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `u64` value to the given byte vector.
-pub(crate) fn write_i64(bytes: &mut Vec<u8>, value: i64) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `u128` value to the given byte vector.
-pub(crate) fn write_i128(bytes: &mut Vec<u8>, value: i128) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `f32` value to the given byte vector.
-pub(crate) fn write_f32(bytes: &mut Vec<u8>, value: f32) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `f64` value to the given byte vector.
-pub(crate) fn write_f64(bytes: &mut Vec<u8>, value: f64) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-/// Writes the given `bool` value to the given byte vector.
-pub(crate) fn write_bool(bytes: &mut Vec<u8>, value: bool) {
-    bytes.push(if value { 1 } else { 0 });
 }
 
 // --- READ ---
@@ -151,5 +96,5 @@ pub(crate) fn read_f64(bytes: &mut &[u8]) -> io::Result<f64> {
 
 /// Decodes an `bool` value from the given raw bytes.
 pub(crate) fn read_bool(bytes: &[u8]) -> Option<bool> {
-    bytes.get(0).map(|byte| *byte != 0)
+    bytes.first().map(|byte| *byte != 0)
 }
