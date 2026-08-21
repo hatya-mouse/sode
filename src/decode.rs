@@ -48,6 +48,11 @@ impl<'a> ValueDecoder<'a> {
             .read_exact(buf)
             .map_err(|_| DecodeError::LengthExceeded)
     }
+
+    /// Returns the remaining bytes in the decoder.
+    pub fn bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
 }
 
 /// A decoder for binary data with multiple values in it.
