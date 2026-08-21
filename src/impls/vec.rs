@@ -20,7 +20,7 @@ impl<T: Decode> Decode for Vec<T> {
             return Err(DecodeError::InvalidLength);
         }
 
-        let mut vec = Vec::with_capacity(count_usize);
+        let mut vec = Vec::new();
 
         // Then read the elements one by one
         for _ in 0..count_usize {
