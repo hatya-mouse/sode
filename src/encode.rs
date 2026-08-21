@@ -37,7 +37,7 @@ impl Encoder {
 
         // Write the encoded data to the byte vector
         let Some(len) = e.bytes.len().try_into().ok() else {
-            return Err(EncodeError::UnsupportedLength);
+            return Err(EncodeError::InvalidLength);
         };
         write_u32(&mut self.bytes, id);
         write_u64(&mut self.bytes, len);
@@ -61,10 +61,25 @@ impl Encoder {
     pub fn write_bytes(&mut self, bytes: &[u8]) {
         self.bytes.extend_from_slice(bytes);
     }
+
+    /// Returns a reference to the encoder's byte vector.
+    pub fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Returns the current length of the encoder's byte vector.
+    pub fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
+    /// Returns whether the encoder's byte vector is empty.
+    pub fn is_empty(&self) -> bool {
+        self.bytes.is_empty()
+    }
 }
 
 /// An error occured during encoding.
 pub enum EncodeError {
-    /// Encoding has failed because the length of the bytes exceeded the supported length.
-    UnsupportedLength,
+    /// Encoding has failed because the length value is invalid or overflown.
+    InvalidLength,
 }

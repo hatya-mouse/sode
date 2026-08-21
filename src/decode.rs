@@ -46,7 +46,7 @@ impl<'a> ValueDecoder<'a> {
     pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), DecodeError> {
         self.bytes
             .read_exact(buf)
-            .map_err(|_| DecodeError::LengthExceeded)
+            .map_err(|_| DecodeError::UnexpectedEof)
     }
 
     /// Returns the remaining bytes in the decoder.
@@ -88,7 +88,7 @@ impl<'a> FieldDecoder<'a> {
         while !bytes.is_empty() {
             // Read the id of the field
             let Ok(id) = read_u32(&mut bytes) else {
-                return Err(DecodeError::LengthExceeded);
+                return Err(DecodeError::UnexpectedEof);
             };
 
             // Check for duplicate field IDs
@@ -98,15 +98,15 @@ impl<'a> FieldDecoder<'a> {
 
             // Read the length of the field data
             let Ok(len) = read_u64(&mut bytes) else {
-                return Err(DecodeError::LengthExceeded);
+                return Err(DecodeError::UnexpectedEof);
             };
 
             // Convert the length to usize safely
-            let len_usize = len.try_into().map_err(|_| DecodeError::UnsupportedLength)?;
+            let len_usize = len.try_into().map_err(|_| DecodeError::InvalidLength)?;
 
             // Then read the field data and insert it to the fields map
             if bytes.len() < len_usize {
-                return Err(DecodeError::LengthExceeded);
+                return Err(DecodeError::UnexpectedEof);
             }
             let (data, rest) = bytes.split_at(len_usize);
             bytes = rest;
@@ -139,12 +139,10 @@ impl<'a> FieldDecoder<'a> {
 
 /// An error occured during decoding.
 pub enum DecodeError {
-    /// Decoding has failed because the length of the bytes exceeded the supported length.
-    UnsupportedLength,
+    /// Decoding has failed because the length value is invalid or overflown.
+    InvalidLength,
     /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
-    /// Decoding has failed because `decode` function returned `None`.
-    DecodeFailed,
-    /// Decoding has failed because the length of the bytes exceeded the available byte length.
-    LengthExceeded,
+    /// Decoding has failed because the decoder reached the end of the file unexpectedly.
+    UnexpectedEof,
 }
