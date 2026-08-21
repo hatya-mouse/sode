@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::primitives::{read_u32, read_u64};
+use crate::utils::{read_u32, read_u64};
 
 /// A trait for types that are decodable using a decoder.
 pub trait Decode: Sized {

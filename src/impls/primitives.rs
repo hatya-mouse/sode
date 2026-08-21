@@ -1,4 +1,4 @@
-use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder, primitives::*};
+use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder, utils::*};
 
 // --- ENCODING ---
 

@@ -1,4 +1,4 @@
-use crate::primitives::{write_u32, write_u64};
+use crate::utils::{write_u32, write_u64};
 
 /// A trait for types that are encodable using an encoder.
 pub trait Encode {

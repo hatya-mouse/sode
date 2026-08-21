@@ -4,7 +4,7 @@ mod decode;
 mod encode;
 /// The implementetion of `Decode` and `Encode` traits for primitive types.
 mod impls;
-pub(crate) mod primitives;
+pub(crate) mod utils;
 
 pub use decode::{Decode, DecodeError, FieldDecoder, ValueDecoder};
 pub use encode::{Encode, EncodeError, Encoder};
