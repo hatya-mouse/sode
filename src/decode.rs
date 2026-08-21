@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Read};
+use crate::primitives::decode_u64;
 
 /// A trait for types that are decodable using a decoder.
 pub trait Decode {
@@ -14,7 +14,12 @@ pub trait Decode {
 /// A struct used to decode data from a binary data.
 pub struct Decoder<'a> {
     version: u64,
-    fields: HashMap<u64, &'a [u8]>,
+    fields: Vec<Field<'a>>,
+}
+
+struct Field<'a> {
+    id: u64,
+    data: &'a [u8],
 }
 
 impl<'a> Decoder<'a> {
@@ -28,27 +33,25 @@ impl<'a> Decoder<'a> {
     }
 
     /// Splits the given bytes into the fields, and returns the field index and its corresponding bytes as a map of byte slices.
-    fn split_fields(mut bytes: &[u8]) -> Result<HashMap<u64, &[u8]>, DecodeError> {
-        let mut fields = HashMap::new();
-        let mut index_bytes = [0u8; 8];
-        let mut len_bytes = [0u8; 8];
+    fn split_fields(mut bytes: &[u8]) -> Result<Vec<Field>, DecodeError> {
+        let mut fields = Vec::new();
 
-        // Read the index of the field
-        while let Ok(()) = bytes.read_exact(&mut index_bytes) {
-            let index = u64::from_le_bytes(index_bytes);
-
-            // Read the length of the field data
-            let Ok(()) = bytes.read_exact(&mut len_bytes) else {
+        while !bytes.is_empty() {
+            // Read the id and length of the field
+            let Ok(id) = decode_u64(&mut bytes) else {
                 return Err(DecodeError::LengthExceeded);
             };
-            let len = u64::from_le_bytes(len_bytes);
+            let Ok(len) = decode_u64(&mut bytes) else {
+                return Err(DecodeError::LengthExceeded);
+            };
 
             // Then read the field data and insert it to the fields map
             if bytes.len() < len as usize {
                 return Err(DecodeError::LengthExceeded);
             }
-            let field_data = &bytes[..len as usize];
-            fields.insert(index, field_data);
+            let (data, rest) = &bytes.split_at(len as usize);
+            bytes = rest;
+            fields.push(Field { id, data });
         }
 
         Ok(fields)
