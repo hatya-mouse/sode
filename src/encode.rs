@@ -37,7 +37,7 @@ impl Encoder {
 
         // Write the encoded data to the byte vector
         let Some(len) = e.bytes.len().try_into().ok() else {
-            return Err(EncodeError::LengthExceeded);
+            return Err(EncodeError::UnsupportedLength);
         };
         write_u32(&mut self.bytes, id);
         write_u64(&mut self.bytes, len);
@@ -66,5 +66,5 @@ impl Encoder {
 /// An error occured during encoding.
 pub enum EncodeError {
     /// Encoding has failed because the length of the bytes exceeded the supported length.
-    LengthExceeded,
+    UnsupportedLength,
 }

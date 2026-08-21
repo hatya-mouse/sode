@@ -55,7 +55,7 @@ impl<'a> ValueDecoder<'a> {
     }
 }
 
-/// A decoder for binary data with multiple values in it.
+/// A decoder for binary data composed of multiple fields with unique IDs.
 pub struct FieldDecoder<'a> {
     version: u64,
     fields: Vec<Field<'a>>,
@@ -102,7 +102,7 @@ impl<'a> FieldDecoder<'a> {
             };
 
             // Convert the length to usize safely
-            let len_usize = len.try_into().map_err(|_| DecodeError::LengthExceeded)?;
+            let len_usize = len.try_into().map_err(|_| DecodeError::UnsupportedLength)?;
 
             // Then read the field data and insert it to the fields map
             if bytes.len() < len_usize {
@@ -139,6 +139,8 @@ impl<'a> FieldDecoder<'a> {
 
 /// An error occured during decoding.
 pub enum DecodeError {
+    /// Decoding has failed because the length of the bytes exceeded the supported length.
+    UnsupportedLength,
     /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
     /// Decoding has failed because `decode` function returned `None`.
