@@ -9,7 +9,8 @@ pub trait Encode {
     fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError>;
 }
 
-/// A struct used to encode data to a binary data.
+/// An encoder.
+/// Use `field` to encode a field with a given ID and value, or `write_bytes` to append raw bytes to the encoder's byte vector.
 #[derive(Default)]
 pub struct Encoder {
     bytes: Vec<u8>,

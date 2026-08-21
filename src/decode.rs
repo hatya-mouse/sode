@@ -1,4 +1,4 @@
-use std::io::{self, Read};
+use std::io::Read;
 
 use crate::primitives::{read_u32, read_u64};
 
@@ -11,7 +11,7 @@ pub trait Decode: Sized {
     fn decode(d: &mut ValueDecoder) -> Result<Self, DecodeError>;
 }
 
-/// A struct used to decode binary data with a single value in it.
+/// A decoder for a raw bytes representin one value.
 pub struct ValueDecoder<'a> {
     version: u64,
     bytes: &'a [u8],
@@ -43,12 +43,14 @@ impl<'a> ValueDecoder<'a> {
     ///
     /// # Parameter
     /// - `buf`: The slice to fill the obtained bytes into.
-    pub fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
-        self.bytes.read_exact(buf)
+    pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), DecodeError> {
+        self.bytes
+            .read_exact(buf)
+            .map_err(|_| DecodeError::LengthExceeded)
     }
 }
 
-/// A struct used to decode binary data with multiple fields in it.
+/// A decoder for binary data with multiple values in it.
 pub struct FieldDecoder<'a> {
     version: u64,
     fields: Vec<Field<'a>>,
