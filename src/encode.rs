@@ -1,8 +1,8 @@
 use crate::primitives::{write_u32, write_u64};
 
 /// A trait for types that are encodable using an encoder.
-pub trait Encode: Sized {
-    /// Encodes the type from the given encoder.
+pub trait Encode {
+    /// Encodes the payload using the given encoder.
     ///
     /// # Parameters
     /// - `e`: A mutable reference to the encoder to use for encoding.
@@ -21,6 +21,10 @@ impl Encoder {
     }
 
     /// Encodes the given value with the given field ID and appends it to the encoder's byte vector.
+    ///
+    /// # Parameters
+    /// - `id`: The ID of the field to encode.
+    /// - `value`: The value to encode, which must implement the `Encode` trait.
     pub fn field<T>(&mut self, id: u32, value: &T) -> Result<(), EncodeError>
     where
         T: Encode,
@@ -38,6 +42,14 @@ impl Encoder {
         self.bytes.extend_from_slice(&e.bytes);
 
         Ok(())
+    }
+
+    /// Appends the given bytes to the encoder's byte vector.
+    ///
+    /// # Parameter
+    /// - `bytes`: A slice of bytes to append to the encoder's byte vector.
+    pub fn write_bytes(&mut self, bytes: &[u8]) {
+        self.bytes.extend_from_slice(bytes);
     }
 }
 

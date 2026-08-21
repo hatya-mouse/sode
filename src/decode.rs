@@ -1,36 +1,80 @@
+use std::io::{self, Read};
+
 use crate::primitives::{read_u32, read_u64};
 
 /// A trait for types that are decodable using a decoder.
 pub trait Decode: Sized {
-    /// Decodes the type from the given decoder.
+    /// Decodes the bytes using the given decoder.
     ///
     /// # Parameters
     /// - `d`: A mutable reference to the decoder to use for decoding.
-    fn decode(d: &mut Decoder) -> Result<Self, DecodeError>;
+    fn decode(d: &mut ValueDecoder) -> Result<Self, DecodeError>;
 }
 
-/// A struct used to decode data from a binary data.
-pub struct Decoder<'a> {
+/// A struct used to decode binary data with a single value in it.
+pub struct ValueDecoder<'a> {
+    version: u64,
+    bytes: &'a [u8],
+}
+
+impl<'a> ValueDecoder<'a> {
+    /// Creates a new `ValueDecoder` from the given bytes.
+    ///
+    /// # Parameters
+    /// - `version`: The version of the data to decode.
+    /// - `bytes`: A slice of bytes to decode from.
+    pub fn from_bytes(version: u64, bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        Ok(ValueDecoder { version, bytes })
+    }
+
+    /// Creates a new `FieldDecoder` from this `ValueDecoder`.
+    pub fn to_field_decoder(&self) -> Result<FieldDecoder<'a>, DecodeError> {
+        FieldDecoder::from_bytes(self.version, self.bytes)
+    }
+
+    /// Returns the version of the data we're currently decoding.
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
+    /// Reads the exact number of bytes required to fill buf.
+    ///
+    /// See [Read::read_exact](https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact) for more details.
+    ///
+    /// # Parameter
+    /// - `buf`: The slice to fill the obtained bytes into.
+    pub fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.bytes.read_exact(buf)
+    }
+}
+
+/// A struct used to decode binary data with multiple fields in it.
+pub struct FieldDecoder<'a> {
     version: u64,
     fields: Vec<Field<'a>>,
 }
 
+/// A struct representing a field in the field decoder.
 struct Field<'a> {
     id: u32,
     data: &'a [u8],
 }
 
-impl<'a> Decoder<'a> {
+impl<'a> FieldDecoder<'a> {
     /// Creates a new `Decoder` from the given bytes, storing the byte index to each fields.
     ///
     /// # Parameters
+    /// - `version`: The version of the data to decode.
     /// - `bytes`: A slice of bytes to decode from.
     pub fn from_bytes(version: u64, bytes: &'a [u8]) -> Result<Self, DecodeError> {
         let fields = Self::parse_fields(bytes)?;
-        Ok(Decoder { version, fields })
+        Ok(FieldDecoder { version, fields })
     }
 
     /// Parses the given bytes into the fields, and returns the field index and its corresponding bytes as a map of byte slices.
+    ///
+    /// # Parameter
+    /// - `bytes`: A slice of bytes to parse into fields.
     fn parse_fields(mut bytes: &'a [u8]) -> Result<Vec<Field<'a>>, DecodeError> {
         let mut fields = Vec::new();
 
@@ -65,7 +109,15 @@ impl<'a> Decoder<'a> {
         Ok(fields)
     }
 
+    /// Returns the version of the data we're currently decoding.
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
     /// Returns the decoded data for the given field ID.
+    ///
+    /// # Parameter
+    /// - `id`: The ID of the field to decode.
     pub fn field<T>(&self, id: u32) -> Result<Option<T>, DecodeError>
     where
         T: Decode,
@@ -73,7 +125,7 @@ impl<'a> Decoder<'a> {
         let Some(field) = self.fields.iter().find(|field| field.id == id) else {
             return Ok(None);
         };
-        let mut d = Decoder::from_bytes(self.version, field.data)?;
+        let mut d = ValueDecoder::from_bytes(self.version, field.data)?;
         T::decode(&mut d).map(Some)
     }
 }
