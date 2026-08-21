@@ -1,4 +1,4 @@
-use crate::primitives::{decode_u32, decode_u64};
+use crate::primitives::{read_u32, read_u64};
 
 /// A trait for types that are decodable using a decoder.
 pub trait Decode: Sized {
@@ -27,17 +27,16 @@ impl<'a> Decoder<'a> {
     /// - `bytes`: A slice of bytes to decode from.
     pub fn from_bytes(version: u64, bytes: &'a [u8]) -> Result<Self, DecodeError> {
         let fields = Self::parse_fields(bytes)?;
-
         Ok(Decoder { version, fields })
     }
 
     /// Parses the given bytes into the fields, and returns the field index and its corresponding bytes as a map of byte slices.
-    fn parse_fields(mut bytes: &'a [u8]) -> Result<Vec<Field>, DecodeError> {
+    fn parse_fields(mut bytes: &'a [u8]) -> Result<Vec<Field<'a>>, DecodeError> {
         let mut fields = Vec::new();
 
         while !bytes.is_empty() {
             // Read the id of the field
-            let Ok(id) = decode_u32(&mut bytes) else {
+            let Ok(id) = read_u32(&mut bytes) else {
                 return Err(DecodeError::LengthExceeded);
             };
 
@@ -47,7 +46,7 @@ impl<'a> Decoder<'a> {
             }
 
             // Read the length of the field data
-            let Ok(len) = decode_u64(&mut bytes) else {
+            let Ok(len) = read_u64(&mut bytes) else {
                 return Err(DecodeError::LengthExceeded);
             };
 
@@ -81,10 +80,10 @@ impl<'a> Decoder<'a> {
 
 /// An error occured during decoding.
 pub enum DecodeError {
-    /// Decode has failed because the field ID is duplicated.
+    /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
-    /// Decode has failed because `decode` function returned `None`.
+    /// Decoding has failed because `decode` function returned `None`.
     DecodeFailed,
-    /// Decode has failed because the length of the bytes exceeded the available byte length.
+    /// Decoding has failed because the length of the bytes exceeded the available byte length.
     LengthExceeded,
 }

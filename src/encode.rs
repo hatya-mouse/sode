@@ -1,1 +1,48 @@
+use crate::primitives::{write_u32, write_u64};
 
+/// A trait for types that are encodable using an encoder.
+pub trait Encode: Sized {
+    /// Encodes the type from the given encoder.
+    ///
+    /// # Parameters
+    /// - `e`: A mutable reference to the encoder to use for encoding.
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError>;
+}
+
+/// A struct used to encode data to a binary data.
+pub struct Encoder {
+    bytes: Vec<u8>,
+}
+
+impl Encoder {
+    /// Creates a new `Encoder`.
+    pub fn new() -> Self {
+        Encoder { bytes: Vec::new() }
+    }
+
+    /// Encodes the given value with the given field ID and appends it to the encoder's byte vector.
+    pub fn field<T>(&mut self, id: u32, value: &T) -> Result<(), EncodeError>
+    where
+        T: Encode,
+    {
+        // Encode the given value using the trait
+        let mut e = Encoder::new();
+        value.encode(&mut e)?;
+
+        // Write the encoded data to the byte vector
+        let Some(len) = e.bytes.len().try_into().ok() else {
+            return Err(EncodeError::LengthExceeded);
+        };
+        write_u32(&mut self.bytes, id);
+        write_u64(&mut self.bytes, len);
+        self.bytes.extend_from_slice(&e.bytes);
+
+        Ok(())
+    }
+}
+
+/// An error occured during encoding.
+pub enum EncodeError {
+    /// Encoding has failed because the length of the bytes exceeded the supported length.
+    LengthExceeded,
+}
