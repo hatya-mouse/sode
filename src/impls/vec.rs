@@ -1,4 +1,4 @@
-use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder, utils::read_u64};
+use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder};
 
 impl<T: Decode> Decode for Vec<T> {
     fn decode(d: &mut ValueDecoder) -> Result<Self, DecodeError> {
@@ -6,11 +6,11 @@ impl<T: Decode> Decode for Vec<T> {
         // [ count ][ data ]
         //             |
         //             v
-        // [ byte length for element 0 ][ data ][ byte length for element 1 ][ data ]...
-        let mut bytes = d.bytes();
+        // [ len of element 0 ][ data ][ len of element 1 ][ data ]...
+        let bytes = d.bytes();
 
         // First get the count of elements in the vector
-        let count = read_u64(&mut bytes).map_err(|_| DecodeError::UnexpectedEof)?;
+        let count = d.read_u64()?;
         let count_usize = count.try_into().map_err(|_| DecodeError::InvalidLength)?;
         let mut vec = Vec::new();
 
@@ -33,7 +33,7 @@ impl<T: Decode> Decode for Vec<T> {
 
 impl<T: Encode> Encode for Vec<T> {
     fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
-        // First write the count of element in the vector
+        // First write the count of element to the vector
         let count: u64 = self
             .len()
             .try_into()

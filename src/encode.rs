@@ -1,5 +1,3 @@
-use crate::utils::{write_u32, write_u64};
-
 /// A trait for types that are encodable using an encoder.
 pub trait Encode {
     /// Encodes the payload using the given encoder.
@@ -35,13 +33,9 @@ impl Encoder {
         let mut e = Encoder::new();
         value.encode(&mut e)?;
 
-        // Write the encoded data to the byte vector
-        let Some(len) = e.bytes.len().try_into().ok() else {
-            return Err(EncodeError::InvalidLength);
-        };
-        write_u32(&mut self.bytes, id);
-        write_u64(&mut self.bytes, len);
-        self.bytes.extend_from_slice(&e.bytes);
+        // Write the id and the encoded data to the byte vector
+        self.write_u32(id);
+        self.write_sized(e.bytes());
 
         Ok(())
     }
@@ -68,8 +62,8 @@ impl Encoder {
             .len()
             .try_into()
             .map_err(|_| EncodeError::InvalidLength)?;
-        write_u64(&mut self.bytes, len);
-        self.bytes.extend_from_slice(bytes);
+        self.write_u64(len);
+        self.write_bytes(bytes);
         Ok(())
     }
 

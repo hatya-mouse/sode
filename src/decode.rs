@@ -1,7 +1,5 @@
 use std::io::Read;
 
-use crate::utils::{read_u32, read_u64};
-
 /// A trait for types that are decodable using a decoder.
 pub trait Decode: Sized {
     /// Decodes the bytes using the given decoder.
@@ -28,8 +26,33 @@ impl<'a> ValueDecoder<'a> {
     }
 
     /// Creates a new `FieldDecoder` from this `ValueDecoder`.
-    pub fn to_field_decoder(&self) -> Result<FieldDecoder<'a>, DecodeError> {
-        FieldDecoder::from_bytes(self.version, self.bytes)
+    pub fn to_field_decoder(mut self) -> Result<FieldDecoder<'a>, DecodeError> {
+        let fields = self.parse_fields()?;
+        Ok(FieldDecoder::new(self.version, fields))
+    }
+
+    /// Parses the bytes into the fields while consuming the bytes, and returns the field index and its corresponding bytes as a map of byte slices.
+    ///
+    /// # Parameter
+    /// - `bytes`: A slice of bytes to parse into fields.
+    fn parse_fields(&mut self) -> Result<Vec<Field<'a>>, DecodeError> {
+        let mut fields = Vec::new();
+
+        while !self.is_empty() {
+            // Read the id of the field
+            let id = self.read_u32()?;
+
+            // Check for duplicate field IDs
+            if fields.iter().any(|field: &Field<'a>| field.id == id) {
+                return Err(DecodeError::DuplicateField);
+            }
+
+            // Read the data of the field
+            let data = self.read_sized()?;
+            fields.push(Field { id, data });
+        }
+
+        Ok(fields)
     }
 
     /// Returns the version of the data we're currently decoding.
@@ -51,13 +74,16 @@ impl<'a> ValueDecoder<'a> {
 
     /// Reads the data bytes prefixed by its length in u64, returning the data bytes.
     pub fn read_sized(&mut self) -> Result<&'a [u8], DecodeError> {
-        let mut bytes = self.bytes;
-        let len = read_u64(&mut bytes).map_err(|_| DecodeError::UnexpectedEof)?;
+        // Read the length of the data bytes
+        let len = self.read_u64().map_err(|_| DecodeError::UnexpectedEof)?;
         let len_usize = len.try_into().map_err(|_| DecodeError::InvalidLength)?;
-        if self.bytes.len() < len_usize {
+        // Perform data length checking
+        if self.len() < len_usize {
             return Err(DecodeError::UnexpectedEof);
         }
-        let (data, rest) = bytes.split_at(len_usize);
+
+        // Then read the data bytes
+        let (data, rest) = self.bytes.split_at(len_usize);
         self.bytes = rest;
         Ok(data)
     }
@@ -91,52 +117,13 @@ struct Field<'a> {
 }
 
 impl<'a> FieldDecoder<'a> {
-    /// Creates a new `Decoder` from the given bytes, storing the byte index to each fields.
+    /// Creates a new `Decoder` from the given version and the fields.
     ///
     /// # Parameters
     /// - `version`: The version of the data to decode.
-    /// - `bytes`: A slice of bytes to decode from.
-    pub fn from_bytes(version: u64, bytes: &'a [u8]) -> Result<Self, DecodeError> {
-        let fields = Self::parse_fields(bytes)?;
-        Ok(FieldDecoder { version, fields })
-    }
-
-    /// Parses the given bytes into the fields, and returns the field index and its corresponding bytes as a map of byte slices.
-    ///
-    /// # Parameter
-    /// - `bytes`: A slice of bytes to parse into fields.
-    fn parse_fields(mut bytes: &'a [u8]) -> Result<Vec<Field<'a>>, DecodeError> {
-        let mut fields = Vec::new();
-
-        while !bytes.is_empty() {
-            // Read the id of the field
-            let Ok(id) = read_u32(&mut bytes) else {
-                return Err(DecodeError::UnexpectedEof);
-            };
-
-            // Check for duplicate field IDs
-            if fields.iter().any(|field: &Field<'a>| field.id == id) {
-                return Err(DecodeError::DuplicateField);
-            }
-
-            // Read the length of the field data
-            let Ok(len) = read_u64(&mut bytes) else {
-                return Err(DecodeError::UnexpectedEof);
-            };
-
-            // Convert the length to usize safely
-            let len_usize = len.try_into().map_err(|_| DecodeError::InvalidLength)?;
-
-            // Then read the field data and insert it to the fields map
-            if bytes.len() < len_usize {
-                return Err(DecodeError::UnexpectedEof);
-            }
-            let (data, rest) = bytes.split_at(len_usize);
-            bytes = rest;
-            fields.push(Field { id, data });
-        }
-
-        Ok(fields)
+    /// - `fields`: The parsed fields.
+    pub fn new(version: u64, fields: Vec<Field<'a>>) -> Self {
+        FieldDecoder { version, fields }
     }
 
     /// Returns the version of the data we're currently decoding.
