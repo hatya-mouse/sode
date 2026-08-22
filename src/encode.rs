@@ -130,12 +130,16 @@ impl Encoder {
 pub enum EncodeError {
     /// Encoding has failed because the length value is invalid or overflowed.
     InvalidLength,
+    /// Encoding has falied because the data is invalid.
+    /// Use this for cases where the value passed to the encoder is semantically invalid.
+    InvalidData,
 }
 
 impl std::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             EncodeError::InvalidLength => write!(f, "the length value is invalid or overflowed"),
+            EncodeError::InvalidData => write!(f, "the data is invalid"),
         }
     }
 }
