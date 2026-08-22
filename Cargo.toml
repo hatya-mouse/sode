@@ -2,5 +2,10 @@
 name = "sode"
 version = "0.1.0"
 edition = "2024"
+description = "A simple and small binary decoding / encoding crate"
+readme = "README.md"
+repository = "https://github.com/hatya-mouse/sode"
+license = "MIT"
+keywords = ["binary", "decoding", "encoding", "serialization", "deserialization"]
 
 [dependencies]
