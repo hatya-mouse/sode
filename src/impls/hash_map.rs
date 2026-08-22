@@ -16,6 +16,12 @@ where
         // First get the count of elements in the vector
         let count = d.read_u64()?;
         let count_usize = count.try_into().map_err(|_| DecodeError::InvalidLength)?;
+
+        // If the remaining length of the binary data is less then the minimum length possible, throw an error
+        if count_usize > d.len() / 16 {
+            return Err(DecodeError::InvalidLength);
+        }
+
         let mut hash_map = HashMap::new();
 
         // Then read the elements one by one
@@ -29,7 +35,11 @@ where
             let value_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;
             let mut value_decoder = ValueDecoder::from_bytes(d.version(), value_bytes)?;
             let value = V::decode(&mut value_decoder)?;
-            hash_map.insert(key, value);
+
+            // If the key already exists in the hash map, return an error
+            if hash_map.insert(key, value).is_some() {
+                return Err(DecodeError::DuplicateKey);
+            }
         }
 
         // Return an error if the length of the binary data is longer than the given count

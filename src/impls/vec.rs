@@ -13,6 +13,11 @@ impl<T: Decode> Decode for Vec<T> {
         let count_usize = count.try_into().map_err(|_| DecodeError::InvalidLength)?;
         let mut vec = Vec::new();
 
+        // If the remaining length of the binary data is less then the minimum length possible, throw an error
+        if count_usize > d.len() / 8 {
+            return Err(DecodeError::InvalidLength);
+        }
+
         // Then read the elements one by one
         for _ in 0..count_usize {
             let element_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;

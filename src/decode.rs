@@ -153,6 +153,8 @@ pub enum DecodeError {
     InvalidLength,
     /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
+    /// Decoding has falied because the HashMap key is duplicated.
+    DuplicateKey,
     /// Decoding has failed because the decoder reached the end of the file unexpectedly.
     UnexpectedEof,
 }
