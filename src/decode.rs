@@ -49,9 +49,32 @@ impl<'a> ValueDecoder<'a> {
             .map_err(|_| DecodeError::UnexpectedEof)
     }
 
+    /// Reads the data bytes prefixed by its length in u64, returning the data bytes.
+    pub fn read_sized(&mut self) -> Result<&'a [u8], DecodeError> {
+        let mut bytes = self.bytes;
+        let len = read_u64(&mut bytes).map_err(|_| DecodeError::UnexpectedEof)?;
+        let len_usize = len.try_into().map_err(|_| DecodeError::InvalidLength)?;
+        if self.bytes.len() < len_usize {
+            return Err(DecodeError::UnexpectedEof);
+        }
+        let (data, rest) = bytes.split_at(len_usize);
+        self.bytes = rest;
+        Ok(data)
+    }
+
     /// Returns the remaining bytes in the decoder.
     pub fn bytes(&self) -> &'a [u8] {
         self.bytes
+    }
+
+    /// Returns the length of the remaining bytes in the decoder.
+    pub fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
+    /// Returns true if there are no remaining bytes in the decoder.
+    pub fn is_empty(&self) -> bool {
+        self.bytes.is_empty()
     }
 }
 

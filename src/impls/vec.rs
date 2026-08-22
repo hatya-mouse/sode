@@ -16,12 +16,7 @@ impl<T: Decode> Decode for Vec<T> {
 
         // Then read the elements one by one
         for _ in 0..count_usize {
-            // Get the byte length of the next element
-            let len = read_u64(&mut bytes).map_err(|_| DecodeError::UnexpectedEof)?;
-            let len_usize = len.try_into().map_err(|_| DecodeError::InvalidLength)?;
-
-            // Read the element data and decode it
-            let element_bytes = bytes.get(..len_usize).ok_or(DecodeError::UnexpectedEof)?;
+            let element_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;
             let mut element_decoder = ValueDecoder::from_bytes(d.version(), element_bytes)?;
             let element = T::decode(&mut element_decoder)?;
             vec.push(element);
@@ -50,16 +45,8 @@ impl<T: Encode> Encode for Vec<T> {
             // Encode the element to bytes
             let mut element_encoder = Encoder::new();
             element.encode(&mut element_encoder)?;
-
-            // Write the length of the element into the encoder
-            let element_len: u64 = element_encoder
-                .len()
-                .try_into()
-                .map_err(|_| EncodeError::InvalidLength)?;
-            e.write_bytes(&element_len.to_le_bytes());
-
-            // Then write the element bytes into the encoder
-            e.write_bytes(element_encoder.bytes());
+            // Write the length and the encoded data
+            e.write_sized(element_encoder.bytes())?;
         }
 
         Ok(())

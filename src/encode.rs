@@ -62,6 +62,17 @@ impl Encoder {
         self.bytes.extend_from_slice(bytes);
     }
 
+    /// Write the given bytes to the encoder's byte vector, adding the length of the bytes as u64 before the data bytes.
+    pub fn write_sized(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
+        let len = bytes
+            .len()
+            .try_into()
+            .map_err(|_| EncodeError::InvalidLength)?;
+        write_u64(&mut self.bytes, len);
+        self.bytes.extend_from_slice(bytes);
+        Ok(())
+    }
+
     /// Returns a reference to the encoder's byte vector.
     pub fn bytes(&self) -> &[u8] {
         &self.bytes
