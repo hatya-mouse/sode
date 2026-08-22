@@ -159,6 +159,11 @@ impl<'a> FieldDecoder<'a> {
         let mut d = ValueDecoder::from_bytes(field.data, self.version)?;
         T::decode(&mut d).map(Some)
     }
+
+    /// Returns all the field IDs in the decoder.
+    pub fn all_field_ids(&self) -> Vec<u32> {
+        self.fields.iter().map(|field| field.id).collect()
+    }
 }
 
 /// An error occured during decoding.
