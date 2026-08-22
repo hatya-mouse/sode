@@ -7,7 +7,6 @@ impl<T: Decode> Decode for Vec<T> {
         //             |
         //             v
         // [ len of element 0 ][ data ][ len of element 1 ][ data ]...
-        let bytes = d.bytes();
 
         // First get the count of elements in the vector
         let count = d.read_u64()?;
@@ -23,7 +22,7 @@ impl<T: Decode> Decode for Vec<T> {
         }
 
         // Return an error if the length of the binary data is longer than the given count
-        if !bytes.is_empty() {
+        if !d.is_empty() {
             return Err(DecodeError::InvalidLength);
         }
 
@@ -38,14 +37,13 @@ impl<T: Encode> Encode for Vec<T> {
             .len()
             .try_into()
             .map_err(|_| EncodeError::InvalidLength)?;
-        e.write_bytes(&count.to_le_bytes());
+        e.write_u64(count);
 
         // Write each element in the vector
         for element in self {
             // Encode the element to bytes
             let mut element_encoder = Encoder::new();
             element.encode(&mut element_encoder)?;
-            // Write the length and the encoded data
             e.write_sized(element_encoder.bytes())?;
         }
 
