@@ -57,6 +57,9 @@ impl Encoder {
     }
 
     /// Write the given bytes to the encoder's byte vector, adding the length of the bytes as u64 before the data bytes.
+    ///
+    /// # Parameter
+    /// - `bytes`: A slice of bytes to encode.
     pub fn write_sized(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
         let len = bytes
             .len()

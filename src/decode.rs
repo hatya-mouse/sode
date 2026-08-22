@@ -19,8 +19,8 @@ impl<'a> ValueDecoder<'a> {
     /// Creates a new `ValueDecoder` from the given bytes.
     ///
     /// # Parameters
-    /// - `version`: The version of the data to decode.
     /// - `bytes`: A slice of bytes to decode from.
+    /// - `version`: The version of the data to decode.
     pub fn from_bytes(bytes: &'a [u8], version: u64) -> Result<Self, DecodeError> {
         Ok(ValueDecoder { version, bytes })
     }
@@ -31,10 +31,7 @@ impl<'a> ValueDecoder<'a> {
         Ok(FieldDecoder::new(fields, self.version))
     }
 
-    /// Parses the bytes into the fields while consuming the bytes, and returns the field index and its corresponding bytes as a map of byte slices.
-    ///
-    /// # Parameter
-    /// - `bytes`: A slice of bytes to parse into fields.
+    /// Parses the bytes into the fields while consuming the bytes, and returns the field index and its corresponding bytes as a vector of fields.
     fn parse_fields(&mut self) -> Result<Vec<Field<'a>>, DecodeError> {
         let mut fields = Vec::new();
 
@@ -112,6 +109,8 @@ impl<'a> ValueDecoder<'a> {
 }
 
 /// A decoder for binary data composed of multiple fields with unique IDs.
+///
+/// This can only be created by calling `to_field_decoder()` on the given `ValueDecoder`.
 pub struct FieldDecoder<'a> {
     fields: Vec<Field<'a>>,
     version: u64,
@@ -127,8 +126,8 @@ impl<'a> FieldDecoder<'a> {
     /// Creates a new `Decoder` from the given version and the fields.
     ///
     /// # Parameters
-    /// - `version`: The version of the data to decode.
     /// - `fields`: The parsed fields.
+    /// - `version`: The version of the data to decode.
     fn new(fields: Vec<Field<'a>>, version: u64) -> Self {
         FieldDecoder { version, fields }
     }
@@ -139,16 +138,11 @@ impl<'a> FieldDecoder<'a> {
     }
 
     /// Returns the decoded data for the given field ID.
-    /// If the field does not exist, this function returns `Ok(None)`.
-    /// If the field exists but decoding fails, this function returns `Err(DecodeError)`.
+    /// If the field does not exist, `Ok(None)` is returned.
+    /// If the field exists but decoding fails, `Err(DecodeError)` is returned.
     ///
     /// # Parameter
     /// - `id`: The ID of the field to decode.
-    ///
-    /// # Usage
-    /// Because this function returns `Ok(None)` when the field does not exist, you can easily provide a default value for the field.
-    ///
-    /// `d.field(0).unwrap_or_default()`
     pub fn field<T>(&self, id: u32) -> Result<Option<T>, DecodeError>
     where
         T: Decode,

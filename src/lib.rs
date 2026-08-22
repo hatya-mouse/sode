@@ -26,10 +26,12 @@
 //! impl Decode for User {
 //!     fn decode(d: &mut ValueDecoder) -> Result<Self, DecodeError> {
 //!         let d = d.to_field_decoder()?;
-//!         let name = d.field(0)?.unwrap_or_default();
-//!         let age = d.field(1)?.unwrap_or_default();
-//!         let id = d.field(2)?.unwrap_or_default();
-//!         Ok(User { name, age, id })
+//!
+//!         Ok(User {
+//!             name: d.field(0)?.unwrap_or_default(),
+//!             age: d.field(1)?.unwrap_or_default(),
+//!             id: d.field(2)?.unwrap_or_default()
+//!         })
 //!     }
 //! }
 //!
