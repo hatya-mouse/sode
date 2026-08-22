@@ -42,7 +42,7 @@ impl<T: Decode> Decode for Vec<T> {
         // Then read the elements one by one
         for _ in 0..count_usize {
             let element_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;
-            let mut element_decoder = ValueDecoder::from_bytes(d.version(), element_bytes)?;
+            let mut element_decoder = ValueDecoder::from_bytes(element_bytes, d.version())?;
             let element = T::decode(&mut element_decoder)?;
             vec.push(element);
         }

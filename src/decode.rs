@@ -11,8 +11,8 @@ pub trait Decode: Sized {
 
 /// A decoder for a raw bytes representin one value.
 pub struct ValueDecoder<'a> {
-    version: u64,
     bytes: &'a [u8],
+    version: u64,
 }
 
 impl<'a> ValueDecoder<'a> {
@@ -21,14 +21,14 @@ impl<'a> ValueDecoder<'a> {
     /// # Parameters
     /// - `version`: The version of the data to decode.
     /// - `bytes`: A slice of bytes to decode from.
-    pub fn from_bytes(version: u64, bytes: &'a [u8]) -> Result<Self, DecodeError> {
+    pub fn from_bytes(bytes: &'a [u8], version: u64) -> Result<Self, DecodeError> {
         Ok(ValueDecoder { version, bytes })
     }
 
     /// Creates a new `FieldDecoder` from this `ValueDecoder`.
-    pub fn to_field_decoder(mut self) -> Result<FieldDecoder<'a>, DecodeError> {
+    pub fn to_field_decoder(&mut self) -> Result<FieldDecoder<'a>, DecodeError> {
         let fields = self.parse_fields()?;
-        Ok(FieldDecoder::new(self.version, fields))
+        Ok(FieldDecoder::new(fields, self.version))
     }
 
     /// Parses the bytes into the fields while consuming the bytes, and returns the field index and its corresponding bytes as a map of byte slices.
@@ -113,8 +113,8 @@ impl<'a> ValueDecoder<'a> {
 
 /// A decoder for binary data composed of multiple fields with unique IDs.
 pub struct FieldDecoder<'a> {
-    version: u64,
     fields: Vec<Field<'a>>,
+    version: u64,
 }
 
 /// A struct representing a field in the field decoder.
@@ -129,7 +129,7 @@ impl<'a> FieldDecoder<'a> {
     /// # Parameters
     /// - `version`: The version of the data to decode.
     /// - `fields`: The parsed fields.
-    fn new(version: u64, fields: Vec<Field<'a>>) -> Self {
+    fn new(fields: Vec<Field<'a>>, version: u64) -> Self {
         FieldDecoder { version, fields }
     }
 
@@ -139,9 +139,16 @@ impl<'a> FieldDecoder<'a> {
     }
 
     /// Returns the decoded data for the given field ID.
+    /// If the field does not exist, this function returns `Ok(None)`.
+    /// If the field exists but decoding fails, this function returns `Err(DecodeError)`.
     ///
     /// # Parameter
     /// - `id`: The ID of the field to decode.
+    ///
+    /// # Usage
+    /// Because this function returns `Ok(None)` when the field does not exist, you can easily provide a default value for the field.
+    ///
+    /// `d.field(0).unwrap_or_default()`
     pub fn field<T>(&self, id: u32) -> Result<Option<T>, DecodeError>
     where
         T: Decode,
@@ -149,14 +156,15 @@ impl<'a> FieldDecoder<'a> {
         let Some(field) = self.fields.iter().find(|field| field.id == id) else {
             return Ok(None);
         };
-        let mut d = ValueDecoder::from_bytes(self.version, field.data)?;
+        let mut d = ValueDecoder::from_bytes(field.data, self.version)?;
         T::decode(&mut d).map(Some)
     }
 }
 
 /// An error occured during decoding.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DecodeError {
-    /// Decoding has failed because the length value is invalid or overflown.
+    /// Decoding has failed because the length value is invalid or overflowed.
     InvalidLength,
     /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
@@ -166,3 +174,16 @@ pub enum DecodeError {
     /// Use this for cases where the decoder can read the bytes, but the value is semantically invalid.
     InvalidData,
 }
+
+impl std::fmt::Display for DecodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DecodeError::InvalidLength => write!(f, "the length value is invalid or overflowed"),
+            DecodeError::DuplicateField => write!(f, "the field ID is duplicated"),
+            DecodeError::UnexpectedEof => write!(f, "the decoder has unexpectedly reached the end"),
+            DecodeError::InvalidData => write!(f, "the data is invalid"),
+        }
+    }
+}
+
+impl std::error::Error for DecodeError {}

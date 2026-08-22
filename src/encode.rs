@@ -81,10 +81,26 @@ impl Encoder {
     pub fn is_empty(&self) -> bool {
         self.bytes.is_empty()
     }
+
+    /// Moves the encoder's byte vector out of the encoder, leaving it empty.
+    pub fn take_bytes(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.bytes)
+    }
 }
 
 /// An error occured during encoding.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EncodeError {
-    /// Encoding has failed because the length value is invalid or overflown.
+    /// Encoding has failed because the length value is invalid or overflowed.
     InvalidLength,
 }
+
+impl std::fmt::Display for EncodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EncodeError::InvalidLength => write!(f, "the length value is invalid or overflowed"),
+        }
+    }
+}
+
+impl std::error::Error for EncodeError {}
