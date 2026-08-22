@@ -4,8 +4,6 @@
 //!
 //! ## Example
 //!
-//! ### Decoding
-//!
 //! ```rust
 //! use sode::{Decode, ValueDecoder};
 //!
@@ -20,6 +18,7 @@
 //!         let name = String::decode(d)?;
 //!         let age = u32::decode(d)?;
 //!         let id = u64::decode(d)?;
+//!         Ok(User { name, age, id })
 //!     }
 //! }
 //! ```

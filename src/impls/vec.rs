@@ -1,5 +1,26 @@
 use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder};
 
+impl<T: Encode> Encode for Vec<T> {
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        // First write the count of element to the vector
+        let count: u64 = self
+            .len()
+            .try_into()
+            .map_err(|_| EncodeError::InvalidLength)?;
+        e.write_u64(count);
+
+        // Write each element in the vector
+        for element in self {
+            // Encode the element to bytes
+            let mut element_encoder = Encoder::new();
+            element.encode(&mut element_encoder)?;
+            e.write_sized(element_encoder.bytes())?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<T: Decode> Decode for Vec<T> {
     fn decode(d: &mut ValueDecoder) -> Result<Self, DecodeError> {
         // Vector is stored in the following format:
@@ -32,26 +53,5 @@ impl<T: Decode> Decode for Vec<T> {
         }
 
         Ok(vec)
-    }
-}
-
-impl<T: Encode> Encode for Vec<T> {
-    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
-        // First write the count of element to the vector
-        let count: u64 = self
-            .len()
-            .try_into()
-            .map_err(|_| EncodeError::InvalidLength)?;
-        e.write_u64(count);
-
-        // Write each element in the vector
-        for element in self {
-            // Encode the element to bytes
-            let mut element_encoder = Encoder::new();
-            element.encode(&mut element_encoder)?;
-            e.write_sized(element_encoder.bytes())?;
-        }
-
-        Ok(())
     }
 }

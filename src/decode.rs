@@ -88,6 +88,13 @@ impl<'a> ValueDecoder<'a> {
         Ok(data)
     }
 
+    /// Reads the data until its end, returning the data bytes.
+    pub fn read_to_end(&mut self) -> &'a [u8] {
+        let bytes = self.bytes;
+        self.bytes = &[];
+        bytes
+    }
+
     /// Returns the remaining bytes in the decoder.
     pub fn bytes(&self) -> &'a [u8] {
         self.bytes
@@ -153,8 +160,9 @@ pub enum DecodeError {
     InvalidLength,
     /// Decoding has failed because the field ID is duplicated.
     DuplicateField,
-    /// Decoding has falied because the HashMap key is duplicated.
-    DuplicateKey,
     /// Decoding has failed because the decoder reached the end of the file unexpectedly.
     UnexpectedEof,
+    /// Decoding has falied because the data is invalid.
+    /// Use this for cases where the decoder can read the bytes, but the value is semantically invalid.
+    InvalidData,
 }

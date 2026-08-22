@@ -1,6 +1,35 @@
 use crate::{Decode, DecodeError, Encode, EncodeError, Encoder, ValueDecoder};
 use std::{collections::HashMap, hash::Hash};
 
+impl<K, V> Encode for HashMap<K, V>
+where
+    K: Encode,
+    V: Encode,
+{
+    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+        // First write the count of the values to the vector
+        let count: u64 = self
+            .len()
+            .try_into()
+            .map_err(|_| EncodeError::InvalidLength)?;
+        e.write_u64(count);
+
+        for (key, value) in self {
+            // Write the key
+            let mut key_encoder = Encoder::new();
+            key.encode(&mut key_encoder)?;
+            e.write_sized(key_encoder.bytes())?;
+
+            // Then write the value
+            let mut value_encoder = Encoder::new();
+            value.encode(&mut value_encoder)?;
+            e.write_sized(value_encoder.bytes())?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<K, V> Decode for HashMap<K, V>
 where
     K: Decode + Eq + Hash,
@@ -38,7 +67,7 @@ where
 
             // If the key already exists in the hash map, return an error
             if hash_map.insert(key, value).is_some() {
-                return Err(DecodeError::DuplicateKey);
+                return Err(DecodeError::InvalidData);
             }
         }
 
@@ -48,34 +77,5 @@ where
         }
 
         Ok(hash_map)
-    }
-}
-
-impl<K, V> Encode for HashMap<K, V>
-where
-    K: Encode,
-    V: Encode,
-{
-    fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
-        // First write the count of the values to the vector
-        let count: u64 = self
-            .len()
-            .try_into()
-            .map_err(|_| EncodeError::InvalidLength)?;
-        e.write_u64(count);
-
-        for (key, value) in self {
-            // Write the key
-            let mut key_encoder = Encoder::new();
-            key.encode(&mut key_encoder)?;
-            e.write_sized(key_encoder.bytes())?;
-
-            // Then write the value
-            let mut value_encoder = Encoder::new();
-            value.encode(&mut value_encoder)?;
-            e.write_sized(value_encoder.bytes())?;
-        }
-
-        Ok(())
     }
 }
