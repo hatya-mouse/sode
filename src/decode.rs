@@ -122,7 +122,7 @@ impl<'a> FieldDecoder<'a> {
     /// # Parameters
     /// - `version`: The version of the data to decode.
     /// - `fields`: The parsed fields.
-    pub fn new(version: u64, fields: Vec<Field<'a>>) -> Self {
+    fn new(version: u64, fields: Vec<Field<'a>>) -> Self {
         FieldDecoder { version, fields }
     }
 

@@ -35,7 +35,7 @@ impl Encoder {
 
         // Write the id and the encoded data to the byte vector
         self.write_u32(id);
-        self.write_sized(e.bytes());
+        self.write_sized(e.bytes())?;
 
         Ok(())
     }
