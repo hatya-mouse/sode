@@ -30,15 +30,15 @@ impl Decode for User {
         Ok(User {
             name: d.field(0)?.unwrap_or_default(),
             age: d.field(1)?.unwrap_or_default(),
-            id: d.field(2)?.unwrap_or_default()
+            id: d.field(2)?.unwrap_or_default(),
         })
     }
 }
 
 let user = User {
     name: "Alice".to_string(),
-    age: 30,
-    id: 256,
+    age: 256,
+    id: 30,
 };
 
 // Encode the user struct into bytes

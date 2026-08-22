@@ -30,7 +30,7 @@
 //!         Ok(User {
 //!             name: d.field(0)?.unwrap_or_default(),
 //!             age: d.field(1)?.unwrap_or_default(),
-//!             id: d.field(2)?.unwrap_or_default()
+//!             id: d.field(2)?.unwrap_or_default(),
 //!         })
 //!     }
 //! }
