@@ -64,7 +64,6 @@ where
             .map_err(|_| EncodeError::InvalidLength)?;
         e.write_u64(count);
 
-        // Write each element in the vector
         for (key, value) in self {
             // Write the key
             let mut key_encoder = Encoder::new();
