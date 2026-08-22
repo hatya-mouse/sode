@@ -56,12 +56,12 @@ where
         // Then read the elements one by one
         for _ in 0..count_usize {
             // Read the key
-            let key_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;
+            let key_bytes = d.read_sized()?;
             let mut key_decoder = ValueDecoder::from_bytes(key_bytes, d.version())?;
             let key = K::decode(&mut key_decoder)?;
 
             // Then read the value
-            let value_bytes = d.read_sized().map_err(|_| DecodeError::InvalidLength)?;
+            let value_bytes = d.read_sized()?;
             let mut value_decoder = ValueDecoder::from_bytes(value_bytes, d.version())?;
             let value = V::decode(&mut value_decoder)?;
 
