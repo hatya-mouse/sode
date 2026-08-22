@@ -7,8 +7,42 @@ pub trait Encode {
     fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError>;
 }
 
-/// An encoder.
-/// Use `field` to encode a field with a given ID and value, or `write_bytes` to append raw bytes to the encoder's byte vector.
+/// An encoder for encoding value to bytes.
+/// Use `field` to encode a field with a given ID and value, or write_* functions to append raw bytes to the encoder's byte vector.
+///
+/// # Example
+/// ```rust
+/// use sode::{Encode, Encoder, EncodeError};
+///
+/// struct Vector3 {
+///     x: f32,
+///     y: f32,
+///     z: f32,
+/// }
+///
+/// impl Encode for Vector3 {
+///     fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+///         // Manually encode the Vector3 struct into bytes
+///         e.write_f32(self.x);
+///         e.write_f32(self.y);
+///         e.write_f32(self.z);
+///         Ok(())
+///     }
+/// }
+///
+/// struct Product {
+///     name: String,
+///     price: u32,
+/// }
+///
+/// impl Encode for Product {
+///     fn encode(&self, e: &mut Encoder) -> Result<(), EncodeError> {
+///         // Use field() to encode the fields with stable IDs
+///         e.field(0, &self.name)?;
+///         e.field(1, &self.price)?;
+///         Ok(())
+///     }
+/// }
 #[derive(Default)]
 pub struct Encoder {
     bytes: Vec<u8>,
