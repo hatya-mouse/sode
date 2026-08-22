@@ -1,5 +1,9 @@
 # sode
 
+![Crates.io License](https://img.shields.io/crates/l/sode?style=for-the-badge)
+![Crates.io Version](https://img.shields.io/crates/v/sode?style=for-the-badge)
+![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/sode?style=for-the-badge)
+
 `sode` is a simple and small binary decoding / encoding crate.
 
 ## Example
